@@ -9,27 +9,15 @@ import (
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 
-	example "github.com/walnut-build/walnut/common"
+	"github.com/walnut-build/walnut/plugin/plugint"
 )
 
-// handshakeConfigs are used to just do a basic handshake between
-// a plugin and host. If the handshake fails, a user friendly error is shown.
-// This prevents users from executing bad plugins or executing a plugin
-// directory. It is a UX feature, not a security feature.
-var handshakeConfig = plugin.HandshakeConfig{
-	ProtocolVersion:  1,
-	MagicCookieKey:   "BASIC_PLUGIN",
-	MagicCookieValue: "hello",
-}
-
 // pluginMap is the map of plugins we can dispense.
-var pluginMap = map[string]plugin.Plugin{
-	"greeter": &example.GreeterPlugin{},
+var pluginMap = map[string]plugin.Plugin {
+	"echo": &plugint.TaskPlugin{},
 }
 
 func main() {  
-    fmt.Println("Hello World")
-
 	logger := hclog.New(&hclog.LoggerOptions{
 		Name:   "plugin",
 		Output: os.Stdout,
@@ -38,9 +26,9 @@ func main() {
 
 	// We're a host! Start by launching the plugin process.
 	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig: handshakeConfig,
+		HandshakeConfig: plugint.TaskHandshakeConfig,
 		Plugins:         pluginMap,
-		Cmd:             exec.Command("./plugin/plugin"),
+		Cmd:             exec.Command("./plugin/implementation/echo/echo"),
 		Logger:          logger,
 	})
 	defer client.Kill()
@@ -52,13 +40,18 @@ func main() {
 	}
 
 	// Request the plugin
-	raw, err := rpcClient.Dispense("greeter")
+	raw, err := rpcClient.Dispense("echo")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// We should have a Greeter now! This feels like a normal interface
 	// implementation but is in fact over an RPC connection.
-	greeter := raw.(example.Greeter)
-	fmt.Println(greeter.Greet())
+	task := raw.(plugint.Task)
+	fmt.Println(task.Run(plugint.RunParameters{
+		Cwd: "",
+		Arguments: map[string]string {
+			"message": "This is some message",
+		},
+	}))
 } 
