@@ -1,0 +1,9 @@
+tasks:
+  first:
+    type: cmd
+    command: echo first
+  second:
+    depends_on:
+      - first
+    type: cmd
+    command: echo second

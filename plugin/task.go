@@ -1,4 +1,4 @@
-package plugint
+package plugin
 
 import (
 	"net/rpc"

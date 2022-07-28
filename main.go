@@ -9,7 +9,7 @@ import (
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 
-	"github.com/walnut-build/walnut/plugin/plugint"
+	plugint "github.com/walnut-build/walnut/plugin"
 )
 
 // pluginMap is the map of plugins we can dispense.
